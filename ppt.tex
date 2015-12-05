@@ -1,0 +1,206 @@
+\documentclass[12pt]{beamer}
+
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+
+\begin{document}
+
+\title{Refining Approximating Betweenness Centrality Based on Samplings}
+\author{Shiyu Ji, Zenghui Yan}
+\date{\today}
+
+\begin{frame}
+	\titlepage
+\end{frame}
+
+\begin{frame}
+	\frametitle{Outline}
+	\begin{small}
+	\tableofcontents%[pausesections]
+	\end{small}
+\end{frame}
+
+\section{Problem Statement}
+\begin{frame}
+	\frametitle{Problem Statement}
+	\begin{itemize}
+		\item How to evaluate the importance of a vertex in the network?
+		\item Important vertices often have high {\bf centrality}.
+		\item {\bf Betweenness Centrality} (BC) has been popularly researched recently.
+		\item How to efficiently calculate/estimate BC?
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Problem Statement (cont'd)}
+	
+	{\bf Betweenness Centrality} of a vertex $v$ in the graph $G=(V,E)$ is
+	$$
+	BC(v) = \sum_{s,t\in V, s\not=t\not=v} \delta_{st}(v),
+	$$
+	where $\delta_{st}(v)$ is called {\bf pair-dependency} of vertex $v$ given a pair $(s,t)$, and is defined as
+	$$
+	\delta_{st}(v) = \frac{\sigma_{st}(v)}{\sigma_{st}},
+	$$
+	in which $\sigma_{st}(v)$ denotes the number of the shortest paths from $s$ to $t$ that pass through $v$, and $\sigma_{st}$ denotes the total number of the shortest paths from $s$ to $t$ ($v$ does not have to be on the paths).
+\end{frame}
+
+\section{Background Literature}
+\begin{frame}
+	\frametitle{Background Literature}
+	Brandes' paper gives the currently fastest algorithm to find the exact BC values, taking at least $O(nm)$ time for unweighted graphs and $O(nm + n^2 \log n)$ time for weighted graphs, where $n$ is the number of vertices $|V|$ and $m$ is the number of edges $|E|$.
+	
+	\begin{itemize}
+		\item \textsc{Brandes, U}. A faster algorithm for betweenness centrality*. {\it Journal of Mathematical Sociology 25}, 2 (2001), 163-177.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Brandes' Main Theorem}
+	\begin{itemize}
+	\item Given a graph $G=(V,E)$, the {\bf dependency} of a source vertex $s\in V$ on a vertex $v\in V$ is
+	$$
+	\delta_{s\cdot} = \sum_{t\in V, s\not= t\not= v} \delta_{st}(v).
+	$$
+
+	\item The {\bf predecessors} of a vertex $v\in V$ on a shortest path from $s$ to $v$ is a subset $P_s(v)\subseteq V$ s.t.
+	$$t\in P_s(v) \Rightarrow \left( d(s,v) = d(s,t) + d(t,v) \wedge (t,v)\in E \right),$$
+	where $d(s,t)$ denotes the length of a shortest path from $s$ to $t$.
+	
+	\item Given a graph $(V,E)$, for any $s,v\in V$, we have
+	$$
+	\delta_{s\cdot}(v) = \sum_{t\in V: v\in P_s(t)} \frac{\sigma_{sv}}{\sigma_{st}}(1+\delta_{s\cdot}(t)).
+	$$
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Brandes' Exact BC Calculation}
+	\begin{algorithmic}
+	\Require Graph $G=(V, E)$. Target vertex $v$ (can be more than one).
+	\Ensure BC for $v$.
+	\State $S\gets 0$.
+	\For {each vertex $s\in V$}
+	\State Compute the shortest paths from $s$ to other vertices. Accumulate the dependencies $S \gets S + \delta_{s\cdot}(v)$.
+	\EndFor
+	\State Return $S$.
+	\end{algorithmic}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Background Literature (cont'd)}
+	For large graph, Brandes' may have unacceptable performance. Bader et al. give an {\it adaptive} BC approximation by {\bf sampling on vertices}, taking $\varepsilon t$ samples to estimate the BC values within a factor of $1/\varepsilon$, where $t$ is the ratio between $n^2$ and the BC value of the vertex.
+	
+	\begin{itemize}
+		\item \textsc{Bader, D. A., and Madduri, K}. A graph-theoretic analysis of the human protein-interaction network using multicore parallel algorithms. {\it Parallel Computing 34}, 11 (2008), 627-639.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Bader's Approximation on Vertex Samplings}
+	\begin{algorithmic}
+	\Require Graph $G=(V, E)$. $n=|V|$. Target vertex $v$.
+	\Ensure Approximated BC value for $v$.
+	\State $S\gets 0$, $k\gets 0$.
+	\While {$S\leq cn$ for some $c\geq 2$}
+	\State Choose a vertex $v_i\in V$ uniformly at random.
+	\State Compute the shortest paths from $v_i$ to other vertices. Accumulate the dependencies $S \gets S + \delta_{v_i\cdot}(v)$.
+	\State $k\gets k+1$.
+	\EndWhile
+	\State Return $nS/k$.
+	\end{algorithmic}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Background Literature (cont'd)}
+	Riondato et al. give a BC approximation by {\bf sampling on shortest paths} with error less than $\varepsilon$ and successful probability $1-\delta$. 
+	However, Riondato's is not adaptive. The authors work out the upper bound of the number of sampling by using Vapnik-Chernovenkis theory.
+	
+	\begin{itemize}
+		\item \textsc{Riondato, M., and Kornaropoulos, E. M}. Fast approximation of betweenness centrality through sampling. {\it Proceedings of the 7th ACM international conference on Web search and data mining}, (2014), ACM, pp. 413-422.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Riondato's Non-Adaptive Sampling on Shortest Paths}
+	\begin{algorithmic}
+	\Require Graph $G=(V, E)$.
+	\Ensure Approximated BC values for each vertex in $V$.
+	\State For each $v\in V$, let $b(v) \gets 0$.
+	\State $r \gets (1/\varepsilon^2)(\lfloor\log (d-2)\rfloor+\ln(1/\delta))$
+	\For {$i \gets 1$ to $r$}
+		\State Choose a pair of different vertices $(u, v)$ in the graph uniformly at random.
+		\State Find all the shortest paths from $u$ to $v$. Denote by $S_{uv}$.
+		\State Choose one path $p$ from $S_{uv}$ uniformly at random.
+		\State For each vertex $z$ (other than $u, v$) in $p$, $b(z) \gets b(z) + 1/r$.
+	\EndFor
+	\State Return $b(v)$ as the approximated BC of each vertex $v \in V$.
+	\end{algorithmic}
+\end{frame}
+
+\section{Our Ideas and Methods}
+\begin{frame}
+	\frametitle{Our Ideas and Methods}
+	\begin{itemize}
+	\item New {\bf adaptive} approximation by {\bf sampling on shortest paths}.
+		\begin{itemize}
+		\item Bader's is adaptive and sampling on vertices.
+		\item Riondato's is {\it not} adaptive and sampling on shortest paths.
+		\item Can merge the ideas!
+		\end{itemize}
+	\item Refine Bader's results, using more tight bounds.
+		\begin{itemize}
+			\item In Bader's paper, proof for Lemma 3: $$\mathrm{Pr} [\sum_{i=1}^k \left( X_i - \frac{A}{n} \right) \geq (c-\varepsilon)n] \leq \sum_{i=1}^k\mathrm{Pr}[X_i - \frac{A}{n} \geq (c-\varepsilon)n]. $$
+			\item More tight bounds can give better results!
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Our Current Results}
+	{\bf Bader's}: For any $\varepsilon \in (0,1/2)$, Bader's algorithm can estimate $BC(v)$ within a factor of $1/\varepsilon$ with a successful probability no less than $1-2\varepsilon$ and $\varepsilon t$ samples.
+	
+	{\bf Our refined results}: For $0<\varepsilon < 1/2$, if $BC(v) =  n^2/t$, $t\geq 1$, then with probability more than $1-2\varepsilon$, BC can be estimated within a factor of $1/(\varepsilon t^{1/3})$ with $\varepsilon t^{2/3}$ samples.
+\end{frame}
+
+\begin{frame}
+	\frametitle{Our BC Approximation based on Sampling on Shortest Paths}
+	
+	\begin{algorithmic}
+	\Require Graph $G=(V, E)$. Target vertex $t\in V$.
+	\Ensure Approximated $BC(t)$.
+	\State $S \gets 0$, $k \gets 0$.
+	\While {$S \leq cn$ for some constant $c\geq 1$}
+		\State Choose a pair of different vertices $(u, v)$ in the graph.
+		\State Find all the shortest paths from $u$ to $v$. Denote by $\sigma_{uv}$ the number of the paths.
+		\State Denote by $\sigma_{uv}(t)$ the number of the above paths that pass through $t$.
+		\State $S \gets S + \sigma_{uv}(t)/\sigma_{uv}$.
+		\State $k \gets k+1$.
+	\EndWhile
+	\State Return $n(n-1)S/k$ as the approximated BC of $t$.
+	\end{algorithmic}
+	
+\end{frame}
+
+\section{Measurements, Datasets, Simulation, Validation}
+\begin{frame}
+	\frametitle{Measurements, Datasets, Simulation, Validation}
+	\begin{itemize}
+	\item {\it Measurements}: Estimation accuracy, running time, successful rate.
+	\item {\it Datasets}: Stanford Large Network Dataset Collection.
+	\item {\it Simulation and Validation}: We will use simulations to verify our results. Brandes, Bader, Riondato et al. already have good implementations written in C and Python.
+	\end{itemize}
+\end{frame}
+
+\section{Future Plan}
+\begin{frame}
+	\frametitle{Future Plan}
+	By the end of this quarter, we can
+	\begin{itemize}
+		\item refine Bader's results and give better theoretical results on vertex samplings;
+		\item propose an adaptive approximation algorithm based on shortest path samplings;
+		\item use simulations to verify our results and algorithm performance.
+	\end{itemize}
+\end{frame}
+
+\end{document}

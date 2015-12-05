@@ -1,0 +1,326 @@
+\documentclass[10pt]{article}
+%\usepackage[letterpaper,hmargin=1in,vmargin=1.25in]{geometry}
+\usepackage{fullpage}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+
+\begin{document}
+
+\title{Refining Approximating Betweenness Centrality Based on Samplings}
+\author{Shiyu Ji, Zenghui Yan}
+\date{\today}
+\maketitle
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+
+\newcommand{\p}{\mathrm{Pr}}
+
+\section{Abstract}
+Betweenness Centrality (BC) is an important measure used widely in complex network analysis, such as social network, web page search, etc \cite{barthelemy2004betweenness}. Computing the exact BC values is highly time consuming \cite{brandes2001faster, brandes2008variants}. Currently the fastest exact BC determining algorithm is given by Brandes \cite{brandes2001faster}, taking $O(nm)$ time for unweighted graphs and $O(nm+n^2\log n)$ time for weighted graphs, where $n$ is the number of vertices and $m$ is the number of edges in the graph. Due to the extreme difficulty of reducing the time complexity of exact BC determining problem, many researchers have considered the possibility of any satisfactory BC approximation algorithms, especially those based on samplings \cite{bader2007approximating, geisberger2008better}. Bader et al. \cite{bader2007approximating} give the currently best BC approximation algorithm, with a high probability to successfully estimate the BC of one vertex within a factor of $1/\varepsilon$ using $\varepsilon t$ samples, where $t$ is the ratio between $n^2$ and the BC value of the vertex. However, some of the algorithmic parameters in Bader's work are not yet tightly bounded, leaving some space to improve their algorithm. In this project, we will revisit Bader's algorithm, give more tight bounds on the estimations, and improve the performance of the approximation algorithm, i.e., fewer samples and lower factors. We will also investigate the possibility to improve the sampling method used in the algorithm. To evaluate our results, we will also conduct extensive experiments using real-world datasets. We will verify that our work can improve the current BC approximation algorithm with better parameters, i.e., higher successful probabilities, lower factors and fewer samples.
+
+\section{Introduction}
+In the past a few decades, how to evaluate the importance of each vertex in a network has attracted extensive researchers. It is still a popular open problem that how to efficiently find the vertex who plays a central role given the network structure. Many measures of centrality have been proposed: Closeness Centrality \cite{sabidussi1966centrality}, Graph Centrality \cite{hage1995eccentricity}, Stress Centrality \cite{shimbel1953structural}, Betweenness Centrality \cite{freeman1977set}. Recently Betweenness Centrality (BC) has been popularly researched \cite{bader2007approximating, brandes2008variants, abboud2015subcubic}, and has many theoretical applications, e.g., fully dynamic graphs \cite{lee2016efficient}, all pairs shortest paths (APSP) and diameter problems \cite{abboud2015subcubic}, clustering \cite{fairbanks2015behavioral}, etc., as well as many real-world applications, e.g., delay-tolerant networks \cite{magaia2015betweenness}, deltaic river network \cite{cui2015assessment}, hot spots on crime data networks \cite{sivaranjani2015mitigating}, etc.
+
+Betweenness is a measure of centrality based on single source shortest paths (SSSP). We first give its definition.
+\begin{definition}
+\label{def:bc}
+{\bf Betweenness Centrality} \cite{freeman1977set, brandes2001faster, bader2007approximating} of a vertex $v$ in the graph $G=(V,E)$ is
+\begin{equation}
+BC(v) = \sum_{s,t\in V, s\not=t\not=v} \delta_{st}(v),
+\end{equation}
+where $\delta_{st}(v)$ is called {\bf pair-dependency} of vertex $v$ given a pair $(s,t)$, and is defined as
+\begin{equation}
+\delta_{st}(v) = \frac{\sigma_{st}(v)}{\sigma_{st}},
+\end{equation}
+in which $\sigma_{st}(v)$ denotes the number of the shortest paths from $s$ to $t$ that pass through $v$, and $\sigma_{st}$ denotes the total number of the shortest paths from $s$ to $t$ ($v$ does not have to be on the paths).
+\end{definition}
+Brandes \cite{brandes2001faster, brandes2008variants} gives the state-of-the-art fastest algorithm to calculate the exact value of BC for each vertex in the graph. Given a graph $G=(V, E)$, Brandes' algorithm takes at least $O(nm)$ time for unweighted graphs and $O(nm + n^2 \log n)$ time for weighted graphs, where $n$ is the number of vertices $|V|$ and $m$ is the number of edges $|E|$. However, for very large and complex networks, the performance of Brandes' algorithm may be unacceptable \cite{bader2007approximating}. For example, in large social networks, Brandes' algorithm may take considerably large amount of time, but we want to find the hot spots or trending timely \cite{kourtellis2013identifying}. There are some heuristic variants on Brandes' algorithm, but the complexity has not seen significantly improvement \cite{puzis2012heuristics}. 
+
+To address the performance problem, people have turned to paralleled algorithms \cite{madduri2009faster, bader2008graph, riondato2014fast}, randomized approximations \cite{bader2007approximating, geisberger2008better}, etc. It turns out that sampling plays an important role in these algorithms. How to choose the samplings to achieve better performance is still an open problem \cite{bader2007approximating} Moreover, many BC approximations by samplings lack theoretical performance bounds, and thus an improved bound may also speed up the algorithm \cite{geisberger2008better}. 
+
+In this project, we will revisit Bader's algorithm, which takes $\varepsilon t$ samples to estimate the BC values within a factor of $1/\varepsilon$, where $t$ is the ratio between $n^2$ and the BC value of the vertex. We will discuss the performance bound of the algorithm, and refine the sampling parameters to achieve better results, e.g., fewer samples and lower factors. We will also use simulations with real-world data to verify our results.
+
+\section{Brandes' Exact Computation of Betweenness Centrality}
+In this section we will talk about the main idea of Brandes' algorithm \cite{brandes2001faster}, which gives exact computation on betweenness centrality (BC) value of each vertex in the network. This is the fastest algorithm on exact BC computation currently.
+
+Dependency of a source vertex on a given node is frequently used in our algorithms and discussions. Here we give the definition: \cite{brandes2001faster}
+\begin{definition}
+Given a graph $G=(V,E)$, the {\bf dependency} of a source vertex $s\in V$ on a vertex $v\in V$ is
+\begin{equation}
+\delta_{s\cdot} = \sum_{t\in V, s\not= t\not= v} \delta_{st}(v).
+\end{equation}
+\end{definition}
+Based on Definition \ref{def:bc}, the BC value of vertex $v$ is
+\begin{equation}
+BC(v) = \sum_{s\not= v} \delta_{s\cdot}.
+\end{equation}
+Brandes finds a recursive way to calculate the BC value of $v$, by introducing {\it predecessors} of $v$.
+\begin{definition}
+Given a graph $(V,E)$, the {\bf predecessors} of a vertex $v\in V$ on a shortest path from $s$ to $v$ is a subset $P_s(v)\subseteq V$ s.t.
+$$t\in P_s(v) \Rightarrow \left( d(s,v) = d(s,t) + d(t,v) \wedge (t,v)\in E \right),$$
+where $d(s,t)$ denotes the length of a shortest path from $s$ to $t$.
+\end{definition}
+The following theorem motivates Brandes' algorithm. Its proof is in \cite{brandes2001faster}.
+\begin{theorem}
+\label{thm:dp}
+Given a graph $(V,E)$, for any $s,v\in V$, we have
+\begin{equation}
+\delta_{s\cdot}(v) = \sum_{t\in V s.t. v\in P_s(t)} \frac{\sigma_{sv}}{\sigma_{st}}(1+\delta_{s\cdot}(t)).
+\end{equation}
+\end{theorem}
+The basic idea of Brandes' algorithm can be summerized as follows:
+\begin{enumerate}
+\item For each vertex $s\in V$, we calculate the shortest paths from $s$ to other vertices, i.e., using Dijkstra's algorithm, which takes at least $O(|E|+|V|\log|V|)$ time.
+\item For each vertex $s\in V$, traverse the vertices in descending order of their distances from $s$, and accumulate the dependencies by Theorem \ref{thm:dp}. Each traversal takes $O(|E|)$ time.
+\end{enumerate}
+The total complexity $T(n,m)$ of Brandes' algorithm, where $n=|V|$ and $m=|E|$, is therefore 
+$$T(n) = O(n(m+n\log n)+nm) = O(nm+n^2\log n).$$
+Even though Brandes' is the fastest algorithm on finding exact BCs, its time complexity can be unbearable in many practical scenarios, e.g., very big graph. This motivates the research in BC approximation based on samplings.
+
+\section{Approximation on Betweenness Centrality Based on Adaptive Vertex Samplings}
+In this section, we give Bader's BC approximation by adaptive-sampling \cite{bader2007approximating}. The basic idea of Bader's algorithm is that if we are only interested in a loose estimation of BC value, then we do not have to compute the shortest paths from each vertex $s\in V$. Instead we can take samples $S\subseteq V$ ($|S|<<|V|$) and compute the shortest paths on each sample $s\in S$. Then we can accumulate the dependencies like Brandes' does, and it is guaranteed that the final sum of dependencies is a good estimation of the BC value, i.e., the approximating factor can be provably bounded.
+
+Consider we want to estimate the BC value of a vertex $v$ given the graph $G=(V,E)$. We summerize Bader's algorithm as follows:
+\begin{enumerate}
+\item Let $S=0$.
+\item Sample a vertex $v_i\in V$. Compute the shortest paths from $v_i$. Accumulate the dependencies $S \gets S+ \delta_{v_i\cdot}(v)$.
+\item If $S \leq cn$ for some $c\geq 1$\footnote{Bader's paper \cite{bader2007approximating} requires $c\geq 2$. We will see the lower bound of $c$ can be relaxed to 1.}, repeat Step 2. Otherwise, output $nS/k$ as the estimation of $BC(v)$, where $k$ is the number of samples.
+\end{enumerate}
+Bader shows this algorithm can successfully estimate the BC value with a high probability and its factor has a upper bound. The following theorem is the main result.
+\begin{theorem}
+\label{thm:bader}
+{\bf (Bader's)} For any $\varepsilon \in (0,1/2)$, Bader's algorithm can estimate $BC(v)$ within a factor of $1/\varepsilon$ with a successful probability no less than $1-2\varepsilon$ and $\varepsilon t$ samples.
+\end{theorem}
+Bader's proof uses some loosely bounded arguments, e.g., the upper bound of the variance of the dependency $\delta_{v_i\cdot}(v)$ for each sample $v_i$. In this paper we will discuss the results when the arguments are more tightly bounded. In fact, we will show that the results in Theorem \ref{thm:bader} can be improved.
+
+\section{Refining Results of BC Approximation Samplings}
+In this section we will discuss the probabilistic sampling model, and show an improved theorem which achieves better parameters compared to Theorem \ref{thm:bader}.
+
+We first give the model assumptions on the samplings. Let $X_i$ be the random variable of dependency $\delta_{v_i\cdot}(v)$, i.e., the sampled source vertex is $v_i$, and the target vertex is $v$. Let $A=BC(v)$. The following lemma gives the probability distribution of $X_i$.
+\begin{lemma}
+\label{lem:df}
+The cdf of $X_i$ is
+$$\p [X_i\leq x] = 
+\begin{cases}
+0 \quad x\leq 0, \\
+1-\left( 1-\frac{x}{A} \right)^{n-1}\quad 0<x<1,\\
+1 \quad x\geq 1.
+\end{cases}$$
+Therefore, the pdf of $X_i$ is
+$$p(x) =
+\begin{cases}
+\frac{n-1}{A} \left( 1-\frac{x}{A} \right)^{n-2} \quad 0<x<1,\\
+0 \quad \mathrm{otherwise}.
+\end{cases}$$
+\end{lemma}
+\begin{proof}
+Note that $\sum_{v_i\in V, v_i\not= v}X_i = A$. Suppose the interval $(0, A)$ is randomly divided into $n$ sub-intervals, each of which represents the length of $X_i$. If the $i$-th sub-interval is larger than $x$, then all the $n-1$ cutting points are distributed outside a sub-interval, whose length is $x$. Formally, we have
+$$\p [X_i>x] = \left( 1-\frac{x}{A} \right)^{n-1}$$
+and $\p [X_i\leq x] = 1-\p [X_i>x]$ gives the desired cdf. By computing the derivative over $0<x<1$, we have the pdf as desired.
+\end{proof}
+In the proof of Lemma \ref{lem:df}, we assume the cutting points of the sub-intervals representing each $X_i$ are uniformly distributed. This is the major assumption of our model.
+
+Now we can compute the mean $E[X_i]$ and the variance $Var[X_i]$.
+\begin{corollary}
+\label{cor:ev}
+$$E[X_i] = \frac{A}{n}, \quad Var[X_i] = \frac{n-1}{n^2(n+1)}A^2.$$
+\end{corollary}
+\begin{proof}
+$$
+\begin{aligned}
+E[X_i] &= \int_0^A x\frac{n-1}{A} \left( 1-\frac{x}{A} \right)^{n-2} dx \\
+&= -x\left( 1-\frac{x}{A}\right)^{n-1}\bigg|_0^A + \int_0^A \left( 1-\frac{x}{A}\right)^{n-1} dx \\
+&= -\frac{A}{n} \left( 1-\frac{x}{A} \right)^n\bigg|_0^A = \frac{A}{n}.
+\end{aligned}
+$$
+$$
+\begin{aligned}
+E[X_i^2] &= \int_0^A x^2\frac{n-1}{A} \left( 1-\frac{x}{A} \right)^{n-2} dx \\
+&= -x^2\left( 1-\frac{x}{A}\right)^{n-1}\bigg|_0^A + 2\int_0^A x\left( 1-\frac{x}{A}\right)^{n-1} dx \\
+&= \frac{2A}{n}\int_0^A \left( 1-\frac{x}{A}\right)^{n} dx = \frac{2A^2}{n(n+1)}.
+\end{aligned}
+$$
+$$Var[X_i] = E[X_i^2] - E[X_i]^2 = \frac{2A^2}{n(n+1)} - \frac{A^2}{n^2} = \frac{n-1}{n^2(n+1)}A^2.$$
+\end{proof}
+
+Like Bader's paper \cite{bader2007approximating}, we need two lemmas to show our main result.
+\begin{lemma}
+\label{lem:1}
+Let $k=\varepsilon (\frac{n^2}{A})^{\frac{2}{3}}$. Then
+$$\p[\sum_{i=1}^k X_i \geq cn] \leq \frac{\varepsilon^3}{(c-\varepsilon)^2}.$$
+\end{lemma}
+\begin{proof}
+Note that $BC(v) = A \leq n^2$. Then we have
+$$
+\begin{aligned}
+&\p[\sum_{i=1}^k X_i \geq cn] = \p[\sum_{i=1}^k \left( X_i - \frac{A}{n} \right) \geq cn-\frac{kA}{n}] \\
+= & \p[\sum_{i=1}^k \left( X_i - \frac{A}{n} \right) \geq cn-\varepsilon n(\frac{A}{n^2})^{\frac{1}{3}}] \\
+\leq & \p[\sum_{i=1}^k \left( X_i - \frac{A}{n} \right) \geq cn-\varepsilon n] &(A\leq n^2)\\
+\leq & \p[\bigvee_{i=1}^k\left( X_i - \frac{A}{n} \right) \geq \frac{c-\varepsilon}{k}n] &\textrm{(at least one $X_i$ exceeds the average)} \\
+\leq & \sum_{i=1}^k \p[\left( X_i - \frac{A}{n} \right) \geq \frac{c-\varepsilon}{k}n] &\textrm{(union bound)} \\
+\leq & \sum_{i=1}^k \frac{k^2}{(c-\varepsilon)^2n^2} Var[X_i] &\textrm{(Chebychev's inequality)}\\
+= & \frac{k^2}{(c-\varepsilon)^2n^2} \sum_{i=1}^k \frac{n-1}{n^2(n+1)}A^2 &\textrm{(Corollary \ref{cor:ev})} \\
+= & \frac{\varepsilon^3 (n-1)}{(c-\varepsilon)^2 (n+1)} \leq \frac{\varepsilon^3}{(c-\varepsilon)^2}.
+\end{aligned}
+$$
+\end{proof}
+
+\begin{lemma}
+\label{lem:2}
+Let $k\geq\varepsilon (\frac{n^2}{A})^{\frac{2}{3}}$ and $d>0$. Then
+$$\p[\bigg|\frac{n}{k}\sum_{i=1}^k X_i - A\bigg|\geq dA] \leq \frac{1}{\varepsilon d^2} \left(\frac{A}{n^2}\right)^{\frac{2}{3}}.$$
+\end{lemma}
+\begin{proof}
+$$
+\begin{aligned}
+&\p[\bigg|\frac{n}{k}\sum_{i=1}^k X_i - A\bigg|\geq dA]
+= \p[\bigg|\sum_{i=1}^k X_i - \frac{kA}{n}\bigg|\geq \frac{kdA}{n}] \\
+= &\p[\bigg|\sum_{i=1}^k \left( X_i - \frac{A}{n}\right) \bigg|\geq \frac{kdA}{n}]
+\leq \frac{n^2}{k^2d^2A^2}k Var[X_i] & \textrm{(Chebychev's inequality)}\\
+= &\frac{n-1}{(n+1)kd^2} \leq \frac{1}{kd^2} = \frac{1}{\varepsilon d^2} \left(\frac{A}{n^2}\right)^{\frac{2}{3}}.
+\end{aligned}
+$$
+\end{proof}
+
+Now we have our main theorem.
+\begin{theorem}
+\label{thm:main}
+For $0<\varepsilon < 1/2$, if $BC(v) = n^2/t$, $t\geq 1$, then with probability more than $1-\left(1+\frac{1}{(2c-1)^2}\right)\varepsilon$, BC can be estimated within a factor of $1/(\varepsilon t^{1/3})$ with $\varepsilon t^{2/3}$ samples.
+\end{theorem}
+\begin{proof}
+We first estimate the probability that our algorithm terminates with $k=\varepsilon (\frac{n^2}{A})^{2/3}$ samples. Lemma \ref{lem:1} guarantees that this probability is less than $\varepsilon^3/(c-\varepsilon)^2$. Since $\varepsilon < 1/2$, we have
+$$\frac{\varepsilon^3}{(c-\varepsilon)^2} \leq \varepsilon \frac{1/4}{(c-1/2)^2}=\frac{\varepsilon}{(2c-1)^2}.$$
+We next estimate the probability that our algorithm fails to estimate within the factor. By setting $d=1/(\varepsilon t^{1/3})$, Lemma \ref{lem:2} guarantees that the probability of such failure is at most $\varepsilon$, if the number of samples $k\geq \varepsilon (\frac{n^2}{A})^{2/3}=\varepsilon t^{2/3}$.
+
+Note that except the above two cases, there is no other case when our algorithm will fail to estimate. By subtracting the probabilities, our algorithm will succeed with probability more than $1-\varepsilon-\frac{1}{(2c-1)^2}\varepsilon$.
+\end{proof}
+
+By setting $c=1$ in Theorem \ref{thm:main}, we have the following corollary, which has better parameters compared to Theorem 3 in \cite{bader2007approximating}.
+\begin{corollary}
+For $0<\varepsilon < 1/2$, if $BC(v) =  n^2/t$, $t\geq 1$, then with probability more than $1-2\varepsilon$, BC can be estimated within a factor of $1/(\varepsilon t^{1/3})$ with $\varepsilon t^{2/3}$ samples.
+\end{corollary}
+
+\section{Adaptive Samplings on Shortest Paths}
+In this section we will propose our BC approximation by adaptive samplings on shortest paths, and analyze its performance. 
+
+\subsection{The Approximation Algorithm}
+Riondato et al. \cite{riondato2014fast} give the idea to approximate BC by sampling on shortest paths between a pair of vertices. The number of samplings are calculated beforehand by using Vapnik-Chervonenkis theory. Thus it is {\it not} adaptive. Riondato's approximation can achieve very small error $\varepsilon$ with very high successful probability, i.e., $1-\delta$. However, the number of samplings can be very high, i.e., $\propto (\ln 1/\delta)/\varepsilon^2$. Hence it is interesting to investigate the possibility of adaptive samplings. Our idea is to merge Bader's \cite{bader2007approximating} and Riondato's \cite{riondato2014fast} methods. 
+We propose Algorithm \ref{alg} to estimate the BC value of the vertex $t$.
+
+\begin{algorithm}
+\centering
+\begin{minipage}{0.95\textwidth}
+\begin{algorithmic}
+\Require Graph $G=(V, E)$. Target vertex $t\in V$.
+\Ensure Approximated $BC(t)$.
+\State $S \gets 0$, $k \gets 0$.
+\While {$S \leq cn$ for some constant $c\geq 1$}
+	\State Choose a pair of different vertices $(u, v)$ in the graph.
+	\State Find all the shortest paths from $u$ to $v$. Denote by $\sigma_{uv}$ the number of the paths.
+	\State Denote by $\sigma_{uv}(t)$ the number of the above paths that pass through $t$.
+	\State $S \gets S + \sigma_{uv}(t)/\sigma_{uv}$.
+	\State $k \gets k+1$.
+\EndWhile
+\State Return $n(n-1)S/k$ as the approximated BC of $t$.
+\end{algorithmic}
+\end{minipage}
+\caption{Betweenness Centrality Approximation Algorithm Based on Adaptive Sampling on Shortest Paths}
+\label{alg}
+\end{algorithm}
+
+\subsection{Analysis}
+Let random variable $Y_i$ be the value $\sigma_{uv}(t)/\sigma_{uv}$ of one sample $(u, v)$. By a similar manner as $X_i$ in sampling on vertices, we may find the cdf and pdf of $Y_i$.
+
+\begin{lemma}
+\label{lem:df2}
+The cdf of $Y_i$ is
+$$\p [Y_i\leq x] = 
+\begin{cases}
+0 \quad x\leq 0, \\
+1-\left( 1-\frac{x}{A} \right)^{n(n-1)-1}\quad 0<x<1,\\
+1 \quad x\geq 1.
+\end{cases}$$
+Therefore, the pdf of $Y_i$ is
+$$p(x) =
+\begin{cases}
+\frac{n(n-1)-1}{A} \left( 1-\frac{x}{A} \right)^{n(n-1)-2} \quad 0<x<1,\\
+0 \quad \mathrm{otherwise}.
+\end{cases}$$
+\end{lemma}
+
+The mean and variance of $Y_i$ can also be found analogously.
+\begin{corollary}
+\label{cor:ev2}
+$$E[Y_i] = \frac{A}{n(n-1)}, \quad Var[Y_i] = \frac{n(n-1)-1}{n^2(n-1)^2(n(n-1)+1)}A^2.$$
+\end{corollary}
+
+Like sampling on vertices, we need two lemmas to help prepare the proofs.
+
+\begin{lemma}
+\label{lem:3}
+Let $k=\varepsilon (\frac{n^2(n-1)}{A})^{\frac{2}{3}}$. Then
+$$\p[\sum_{i=1}^k Y_i \geq cn] \leq \frac{\varepsilon^3}{(c-\varepsilon)^2}.$$
+\end{lemma}
+\begin{proof}
+$$
+\begin{aligned}
+&\p[\sum_{i=1}^k Y_i \geq cn] \\
+= &\p[\sum_{i=1}^k \left( Y_i - \frac{A}{n(n-1)} \right) \geq cn-\frac{kA}{n(n-1)}] \\
+= & \p[\sum_{i=1}^k \left( Y_i - \frac{A}{n(n-1)} \right) \geq cn-\varepsilon n(\frac{A}{n^2(n-1)})^{\frac{1}{3}}] \\
+\leq & \p[\sum_{i=1}^k \left( Y_i - \frac{A}{n(n-1)} \right) \geq cn-\varepsilon n] &(A\leq n^2)\\
+\leq & \p[\bigvee_{i=1}^k\left( Y_i - \frac{A}{n(n-1)} \right) \geq \frac{c-\varepsilon}{k}n] &\textrm{(at least one $Y_i$ exceeds the average)} \\
+\leq & \sum_{i=1}^k \p[\left( Y_i - \frac{A}{n(n-1)} \right) \geq \frac{c-\varepsilon}{k}n] &\textrm{(union bound)} \\
+\leq & \sum_{i=1}^k \frac{k^2}{(c-\varepsilon)^2n^2} Var[Y_i] &\textrm{(Chebychev's inequality)}\\
+= & \frac{k^2}{(c-\varepsilon)^2n^2} \sum_{i=1}^k \frac{n(n-1)-1}{n^2(n-1)^2(n(n-1)+1)}A^2 &\textrm{(Corollary \ref{cor:ev2})} \\
+= & \frac{\varepsilon^3 (n(n-1)-1)}{(c-\varepsilon)^2 (n(n-1)+1)} \leq \frac{\varepsilon^3}{(c-\varepsilon)^2}. & \textrm{(Jensen's inequality)}
+\end{aligned}
+$$
+\end{proof}
+
+\begin{lemma}
+\label{lem:4}
+Let $k\geq\varepsilon (\frac{n^2(n-1)}{A})^{\frac{2}{3}}$ and $d>0$. Then
+$$\p[\bigg|\frac{n(n-1)}{k}\sum_{i=1}^k Y_i - A\bigg|\geq dA] \leq \frac{1}{\varepsilon d^2} \left(\frac{A}{n^2(n-1)}\right)^{\frac{2}{3}}.$$
+\end{lemma}
+\begin{proof}
+$$
+\begin{aligned}
+&\p[\bigg|\frac{n(n-1)}{k}\sum_{i=1}^k Y_i - A\bigg|\geq dA]\\
+= &\p[\bigg|\sum_{i=1}^k Y_i - \frac{kA}{n(n-1)}\bigg|\geq \frac{kdA}{n(n-1)}] \\
+= &\p[\bigg|\sum_{i=1}^k \left( Y_i - \frac{A}{n(n-1)}\right) \bigg|\geq \frac{kdA}{n(n-1)}]
+\leq \frac{n^2(n-1)^2}{k^2d^2A^2}k Var[Y_i] & \textrm{(Chebychev's inequality)}\\
+= &\frac{n(n-1)-1}{(n(n-1)+1)kd^2} \leq \frac{1}{kd^2} = \frac{1}{\varepsilon d^2} \left(\frac{A}{n^2(n-1)}\right)^{\frac{2}{3}}. & \textrm{(Jensen's inequality)}
+\end{aligned}
+$$
+\end{proof}
+
+Now we can summarize the performance result of sampling on shortest paths.
+
+\begin{theorem}
+\label{thm:main2}
+For $0<\varepsilon < 1/2$, if $BC(v) = n^2/t$, $t\geq 1$, then with probability more than $1-\left(1+\frac{1}{(2c-1)^2}\right)\varepsilon$, BC can be estimated within a factor of $\frac{1}{\varepsilon}\left(\frac{1}{t(n-1)}\right)^{\frac{1}{3}}$ with $\varepsilon t^{\frac{2}{3}}(n-1)^{\frac{1}{3}}$ samples.
+\end{theorem}
+\begin{proof}
+We first estimate the probability that our algorithm terminates with $k=\varepsilon (\frac{n^2(n-1)}{A})^{2/3}$ samples. Lemma \ref{lem:1} guarantees that this probability is less than $\varepsilon^3/(c-\varepsilon)^2$. Since $\varepsilon < 1/2$, we have
+$$\frac{\varepsilon^3}{(c-\varepsilon)^2} \leq \varepsilon \frac{1/4}{(c-1/2)^2}=\frac{\varepsilon}{(2c-1)^2}.$$
+We next estimate the probability that our algorithm fails to estimate within the factor. By setting $d=\frac{1}{\varepsilon}\left(\frac{1}{t(n-1)}\right)^{\frac{1}{3}}$, Lemma \ref{lem:2} guarantees that the probability of such failure is at most $\varepsilon$, if the number of samples $k\geq \varepsilon (\frac{n^29n-1)}{A})^{2/3}=\varepsilon t^{2/3}(n-1)^{\frac{1}{3}}$.
+\end{proof}
+
+Similarly, we have the following corollary.
+\begin{corollary}
+For $0<\varepsilon < 1/2$, if $BC(v) = n^2/t$, $t\geq 1$, then with probability more than $1-2\varepsilon$, BC can be estimated within a factor of $\frac{1}{\varepsilon}\left(\frac{1}{t(n-1)}\right)^{\frac{1}{3}}$ with $\varepsilon t^{\frac{2}{3}}(n-1)^{\frac{1}{3}}$ samples.
+\end{corollary}
+Compared with sampling on vertices, the factor is much less $\frac{1}{\varepsilon}\left(\frac{1}{t(n-1)}\right)^{\frac{1}{3}} < 1/(\varepsilon t^{1/3})$, but we use more samples. Fortunately, sampling on pairs has less time cost than sampling on vertices, i.e., it is not necessary to calculate the single source shortest paths (SSSP) to all the vertices in the graph. When the destined vertex is reached, the SSSP calculation can stop earlier without exhausting all the vertices in the graph. However, sampling on vertices requires SSSP to all the vertices for each sample. In this light, we believe sampling on shortest paths has better performance than sampling on vertices. We will use simulations on real-world data to verify this fact.
+
+\bibliographystyle{acm}
+\bibliography{./lit}
+
+\end{document}
