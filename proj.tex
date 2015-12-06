@@ -42,7 +42,7 @@ where $\delta_{st}(v)$ is called {\bf pair-dependency} of vertex $v$ given a pai
 \end{equation}
 in which $\sigma_{st}(v)$ denotes the number of the shortest paths from $s$ to $t$ that pass through $v$, and $\sigma_{st}$ denotes the total number of the shortest paths from $s$ to $t$ ($v$ does not have to be on the paths).
 \end{definition}
-In the related works, we will discuss the most important existing techniques of finding the exact or estimated BC values given a large graph. Then we will revisit Bader's algorithm and give our new algorithm sampling on shortest paths. For both algorithms, we will rigorously show the results that can achieve improved bounds on number of samplings and approximation factors. To evaluate the performance, we will discuss our experimental results in Section \ref{sec:exp}.
+In the related works, we will discuss the most important existing techniques of finding the exact or estimated BC values given a large graph. Then we will revisit Bader's algorithm and give our new algorithm sampling on shortest paths. For both algorithms, we will rigorously show the results that can achieve improved bounds on number of samplings and approximation factors. To evaluate the performance, we will discuss our experimental results in Section \ref{sec:exp}. Finally, future works and conclusions will be presented
 
 \section{Related Works}
 Brandes \cite{brandes2001faster, brandes2008variants} gives the state-of-the-art fastest algorithm to calculate the exact value of BC for each vertex in the graph. Given a graph $G=(V, E)$, Brandes' algorithm takes at least $O(nm)$ time for unweighted graphs and $O(nm + n^2 \log n)$ time for weighted graphs, where $n$ is the number of vertices $|V|$ and $m$ is the number of edges $|E|$. However, for very large and complex networks, the performance of Brandes' algorithm may be unacceptable \cite{bader2007approximating}. For example, in large social networks, Brandes' algorithm may take considerably large amount of time, but we want to find the hot spots or trending timely \cite{kourtellis2013identifying}. There are some heuristic variants on Brandes' algorithm, but the complexity has not seen significantly improvement \cite{puzis2012heuristics}. 
@@ -325,6 +325,95 @@ Compared with sampling on vertices, the factor is much less $\frac{1}{\varepsilo
 
 \section{Evaluations}
 \label{sec:exp}
+In this section, we will present our experimental results of revised Bader's method and our proposed algorithms. We will consider the accuracy of the estimation and running time, i.e., the approximation factors and the number of samplings.
+
+{\it Experiment setup}: We implemented our algorithm, and used the implementation of Brandes' \cite{brandes2001faster} from igraph \cite{csardi2006igraph}. All the implementations were written in C, and were tested on uniform system: 4-core Intel Xeon Processors with 16GB RAM, and SMP Linux with kernel version 3.19.8. Each measurement was averaged over 10 instances.
+
+{\it Datasets}: We use Stanford Large Network Dataset Collection (SLNDC) \cite{leskovec2014snap}. We focus one two real-world graphs, \texttt{oregon1-010331} and \texttt{ego-Facebook}. Note that \texttt{oregon1-010331} has been used by Riondato \cite{riondato2014fast}, and \texttt{ego-Facebook} has fewer vertices but denser edges. Table \ref{tab:graphs} gives details about the two graphs.
+\begin{table}[!t]
+\centering
+\begin{tabular}{c || c | c | c}
+ & $|V|$ & $|E|$ & avg. clustering coef.\\
+\hline
+\texttt{oregon1-010331} & 10670 & 22002 & 0.2970 \\
+\texttt{ego-Facebook} & 4039 & 88234 & 0.6055 \\
+\end{tabular}
+\caption{Details from SLNDC.}
+\label{tab:graphs}
+\end{table}
+
+\subsection{Revised Bader's Algorithm}
+
+\begin{figure*}[!t]
+\centering
+\begin{minipage}[t]{0.3\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./bader1_c_sample.eps}
+\caption{$c \sim \textrm{\# samples}$.}
+\label{fig:bader_c_sample}
+\end{minipage}
+\hspace{10pt}
+\begin{minipage}[t]{0.3\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./bader1_c_factor.eps}
+\caption{$c \sim \textrm{factor}$.}
+\label{fig:bader_c_factor}
+\end{minipage}
+\hspace{10pt}
+\begin{minipage}[t]{0.3\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./bader1_sample_factor.eps}
+\caption{$\textrm{\# samples} \sim \textrm{factor}$}
+\label{fig:bader_sample_factor}
+\end{minipage}
+\end{figure*}
+
+We present the results for our revised Bader's algorithm. 
+Figure \ref{fig:bader_c_sample} gives that the number of samplings increases if the parameter $c$ in the algorithm increases. The growth is almost linear, since the curves present steady slopes. This is because in the algorithm, higher $c$ gives larger threshold when the loop terminates, and hence admits more samplings. Note that the range of $c$ starts from 1.0. That is different from \cite{bader2007approximating}, which required $c>2$. 
+
+Figure \ref{fig:bader_c_factor} gives that the approximation factor decreases if $c$ increases. This is presented in Theorem \ref{thm:main}. That is, if the number of samples $S=\varepsilon t^{2/3}$, then the factor is less than $b = 1/(\varepsilon t^{1/3}) = t^{1/3}/S$. $b$ should decrease as $S$ increases. It also indicates that the revised Bader's algorithm gives better approximations for sparse graphs.
+
+Figure \ref{fig:bader_sample_factor} gives that the reciprocal factor is almost linearly related to the number of samples. From Theorem \ref{thm:main}, the upper bound $b$ of factor satisfies $b = t^{1/3}/S$, or $1/b \propto S$. Figure \ref{fig:bader_sample_factor} indicates that the actual factor seems to be proportional to the number of samplings as well. 
+
+Figures \ref{fig:bader_c_factor} and \ref{fig:bader_sample_factor} together indicates that the revised Bader's algorithm still works well for $1<c<2$.
+
+\subsection{Samplings on Shortest Paths}
+
+\begin{figure*}[!t]
+\centering
+\begin{minipage}[t]{0.3\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./rion_c_sample.eps}
+\caption{$c \sim \textrm{\# samples}$.}
+\label{fig:rion_c_sample}
+\end{minipage}
+\hspace{10pt}
+\begin{minipage}[t]{0.3\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./rion_c_factor.eps}
+\caption{$c \sim \textrm{factor}$.}
+\label{fig:rion_c_factor}
+\end{minipage}
+\hspace{10pt}
+\begin{minipage}[t]{0.3\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./rion_sample_factor.eps}
+\caption{$\textrm{\# samples} \sim \textrm{factor}$}
+\label{fig:rion_sample_factor}
+\end{minipage}
+\end{figure*}
+
+Figure \ref{fig:rion_c_sample} gives that the number of samplings increases if the parameter $c$ in the algorithm increases. The growth is almost linear, since the curves present steady slopes. Similarly to the first algorithm, this is because in the algorithm, higher $c$ gives larger threshold when the loop terminates, allowing more samplings. The number of samplings for graph with more vertices grows faster, since based on Theorem \ref{thm:main2}, the number of samples is proportional to $(n-1)^{1/3}$, where $n$ denotes the number of vertices.
+
+Figure \ref{fig:rion_c_factor} gives that the approximation factor decreases if $c$ increases. This is presented in Theorem \ref{thm:main2}. That is, if the number of samples $S'=\varepsilon t^{2/3}(n-1)^{1/3}$, then the factor is less than $b' = 1/(\varepsilon (t(n-1))^{1/3}) = t^{1/3}/S'$. $b'$ should decrease as $S'$ increases. It also indicates that our algorithm gives better approximations for sparse graphs. 
+
+Figure \ref{fig:rion_sample_factor} gives that the reciprocal factor is almost linearly related to the number of samples. From Theorem \ref{thm:main2}, the upper bound $b'$ of factor satisfies $b' = t^{1/3}/S'$, or $1/b' \propto S'$. It also indicates that the actual factor seems to be proportional to the number of samplings as well.
+
+\section{Future Works}
+One open problem which is revealed in the experiments is that it seems the reciprocal factor is proportional to the number of samplings. The question is whether this conjecture can be shown by theory. Theorems \ref{thm:main} and \ref{thm:main2} both only discuss the upper bound of factors. How to more tightly bound the factors still needs further research.
+
+\section{Conclusions}
+In this project, we have revisited Bader's BC estimating algorithm, given more tight bounds on the estimations, and improved the performance of the approximation algorithm, i.e., fewer samples and lower factors. We have also proposed an \emph{adaptive} algorithm with samplings on vertices. With rigorous reasoning, we have shown that our algorithm can also give bounded approximation factors and number of samplings. To evaluate our results, we have also conducted extensive experiments using real-world datasets. It turns out that both the algorithms can achieve ideal performance. We have verified that our work can improve the current BC approximation algorithm with better parameters, i.e., higher successful probabilities, lower factors and fewer samples.
 
 \bibliographystyle{acm}
 \bibliography{./lit}
