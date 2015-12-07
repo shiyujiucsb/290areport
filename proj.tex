@@ -125,9 +125,7 @@ $$p(x) =
 \end{cases}$$
 \end{lemma}
 \begin{proof}
-Note that $\sum_{v_i\in V, v_i\not= v}X_i = A$. Suppose the interval $(0, A)$ is randomly divided into $n$ sub-intervals, each of which represents the length of $X_i$. If the $i$-th sub-interval is larger than $x$, then all the $n-1$ cutting points are distributed outside a sub-interval, whose length is $x$. Formally, we have
-$$\p [X_i>x] = \left( 1-\frac{x}{A} \right)^{n-1}$$
-and $\p [X_i\leq x] = 1-\p [X_i>x]$ gives the desired cdf. By computing the derivative over $0<x<1$, we have the pdf as desired.
+See the Appendix.
 \end{proof}
 In the proof of Lemma \ref{lem:df}, we assume the cutting points of the sub-intervals representing each $X_i$ are uniformly distributed. This is the major assumption of our model.
 
@@ -137,21 +135,7 @@ Now we can compute the mean $E[X_i]$ and the variance $Var[X_i]$.
 $$E[X_i] = \frac{A}{n}, \quad Var[X_i] = \frac{n-1}{n^2(n+1)}A^2.$$
 \end{corollary}
 \begin{proof}
-$$
-\begin{aligned}
-E[X_i] &= \int_0^A x\frac{n-1}{A} \left( 1-\frac{x}{A} \right)^{n-2} dx \\
-&= -x\left( 1-\frac{x}{A}\right)^{n-1}\bigg|_0^A + \int_0^A \left( 1-\frac{x}{A}\right)^{n-1} dx \\
-&= -\frac{A}{n} \left( 1-\frac{x}{A} \right)^n\bigg|_0^A = \frac{A}{n}.
-\end{aligned}
-$$
-$$
-\begin{aligned}
-E[X_i^2] &= \int_0^A x^2\frac{n-1}{A} \left( 1-\frac{x}{A} \right)^{n-2} dx \\
-&= -x^2\left( 1-\frac{x}{A}\right)^{n-1}\bigg|_0^A + 2\int_0^A x\left( 1-\frac{x}{A}\right)^{n-1} dx \\
-&= \frac{2A}{n}\int_0^A \left( 1-\frac{x}{A}\right)^{n} dx = \frac{2A^2}{n(n+1)}.
-\end{aligned}
-$$
-$$Var[X_i] = E[X_i^2] - E[X_i]^2 = \frac{2A^2}{n(n+1)} - \frac{A^2}{n^2} = \frac{n-1}{n^2(n+1)}A^2.$$
+See the Appendix.
 \end{proof}
 
 Like Bader's paper \cite{bader2007approximating}, we need two lemmas to show our main result.
@@ -161,19 +145,7 @@ Let $k=\varepsilon (\frac{n^2}{A})^{\frac{2}{3}}$. Then
 $$\p[\sum_{i=1}^k X_i \geq cn] \leq \frac{\varepsilon^3}{(c-\varepsilon)^2}.$$
 \end{lemma}
 \begin{proof}
-Note that $BC(v) = A \leq n^2$. Then we have
-$$
-\begin{aligned}
-&\p[\sum_{i=1}^k X_i \geq cn] = \p[\sum_{i=1}^k \left( X_i - \frac{A}{n} \right) \geq cn-\frac{kA}{n}] \\
-= & \p[\sum_{i=1}^k \left( X_i - \frac{A}{n} \right) \geq cn-\varepsilon n(\frac{A}{n^2})^{\frac{1}{3}}] \\
-\leq & \p[\sum_{i=1}^k \left( X_i - \frac{A}{n} \right) \geq cn-\varepsilon n] &(A\leq n^2)\\
-\leq & \p[\bigvee_{i=1}^k\left( X_i - \frac{A}{n} \right) \geq \frac{c-\varepsilon}{k}n] &\textrm{(at least one $X_i$ exceeds the average)} \\
-\leq & \sum_{i=1}^k \p[\left( X_i - \frac{A}{n} \right) \geq \frac{c-\varepsilon}{k}n] &\textrm{(union bound)} \\
-\leq & \sum_{i=1}^k \frac{k^2}{(c-\varepsilon)^2n^2} Var[X_i] &\textrm{(Chebychev's inequality)}\\
-= & \frac{k^2}{(c-\varepsilon)^2n^2} \sum_{i=1}^k \frac{n-1}{n^2(n+1)}A^2 &\textrm{(Corollary \ref{cor:ev})} \\
-= & \frac{\varepsilon^3 (n-1)}{(c-\varepsilon)^2 (n+1)} \leq \frac{\varepsilon^3}{(c-\varepsilon)^2}.
-\end{aligned}
-$$
+See the Appendix.
 \end{proof}
 
 \begin{lemma}
@@ -182,15 +154,7 @@ Let $k\geq\varepsilon (\frac{n^2}{A})^{\frac{2}{3}}$ and $d>0$. Then
 $$\p[\bigg|\frac{n}{k}\sum_{i=1}^k X_i - A\bigg|\geq dA] \leq \frac{1}{\varepsilon d^2} \left(\frac{A}{n^2}\right)^{\frac{2}{3}}.$$
 \end{lemma}
 \begin{proof}
-$$
-\begin{aligned}
-&\p[\bigg|\frac{n}{k}\sum_{i=1}^k X_i - A\bigg|\geq dA]
-= \p[\bigg|\sum_{i=1}^k X_i - \frac{kA}{n}\bigg|\geq \frac{kdA}{n}] \\
-= &\p[\bigg|\sum_{i=1}^k \left( X_i - \frac{A}{n}\right) \bigg|\geq \frac{kdA}{n}]
-\leq \frac{n^2}{k^2d^2A^2}k Var[X_i] & \textrm{(Chebychev's inequality)}\\
-= &\frac{n-1}{(n+1)kd^2} \leq \frac{1}{kd^2} = \frac{1}{\varepsilon d^2} \left(\frac{A}{n^2}\right)^{\frac{2}{3}}.
-\end{aligned}
-$$
+See the Appendix.
 \end{proof}
 
 Now we have our main theorem.
@@ -273,19 +237,7 @@ Let $k=\varepsilon (\frac{n^2(n-1)}{A})^{\frac{2}{3}}$. Then
 $$\p[\sum_{i=1}^k Y_i \geq cn] \leq \frac{\varepsilon^3}{(c-\varepsilon)^2}.$$
 \end{lemma}
 \begin{proof}
-$$
-\begin{aligned}
-&\p[\sum_{i=1}^k Y_i \geq cn] \\
-= &\p[\sum_{i=1}^k \left( Y_i - \frac{A}{n(n-1)} \right) \geq cn-\frac{kA}{n(n-1)}] \\
-= & \p[\sum_{i=1}^k \left( Y_i - \frac{A}{n(n-1)} \right) \geq cn-\varepsilon n(\frac{A}{n^2(n-1)})^{\frac{1}{3}}] \\
-\leq & \p[\sum_{i=1}^k \left( Y_i - \frac{A}{n(n-1)} \right) \geq cn-\varepsilon n] &(A\leq n^2)\\
-\leq & \p[\bigvee_{i=1}^k\left( Y_i - \frac{A}{n(n-1)} \right) \geq \frac{c-\varepsilon}{k}n] &\textrm{(at least one $Y_i$ exceeds the average)} \\
-\leq & \sum_{i=1}^k \p[\left( Y_i - \frac{A}{n(n-1)} \right) \geq \frac{c-\varepsilon}{k}n] &\textrm{(union bound)} \\
-\leq & \sum_{i=1}^k \frac{k^2}{(c-\varepsilon)^2n^2} Var[Y_i] &\textrm{(Chebychev's inequality)}\\
-= & \frac{k^2}{(c-\varepsilon)^2n^2} \sum_{i=1}^k \frac{n(n-1)-1}{n^2(n-1)^2(n(n-1)+1)}A^2 &\textrm{(Corollary \ref{cor:ev2})} \\
-= & \frac{\varepsilon^3 (n(n-1)-1)}{(c-\varepsilon)^2 (n(n-1)+1)} \leq \frac{\varepsilon^3}{(c-\varepsilon)^2}. & \textrm{(Jensen's inequality)}
-\end{aligned}
-$$
+See the Appendix.
 \end{proof}
 
 \begin{lemma}
@@ -294,15 +246,7 @@ Let $k\geq\varepsilon (\frac{n^2(n-1)}{A})^{\frac{2}{3}}$ and $d>0$. Then
 $$\p[\bigg|\frac{n(n-1)}{k}\sum_{i=1}^k Y_i - A\bigg|\geq dA] \leq \frac{1}{\varepsilon d^2} \left(\frac{A}{n^2(n-1)}\right)^{\frac{2}{3}}.$$
 \end{lemma}
 \begin{proof}
-$$
-\begin{aligned}
-&\p[\bigg|\frac{n(n-1)}{k}\sum_{i=1}^k Y_i - A\bigg|\geq dA]\\
-= &\p[\bigg|\sum_{i=1}^k Y_i - \frac{kA}{n(n-1)}\bigg|\geq \frac{kdA}{n(n-1)}] \\
-= &\p[\bigg|\sum_{i=1}^k \left( Y_i - \frac{A}{n(n-1)}\right) \bigg|\geq \frac{kdA}{n(n-1)}]
-\leq \frac{n^2(n-1)^2}{k^2d^2A^2}k Var[Y_i] & \textrm{(Chebychev's inequality)}\\
-= &\frac{n(n-1)-1}{(n(n-1)+1)kd^2} \leq \frac{1}{kd^2} = \frac{1}{\varepsilon d^2} \left(\frac{A}{n^2(n-1)}\right)^{\frac{2}{3}}. & \textrm{(Jensen's inequality)}
-\end{aligned}
-$$
+See the Appendix.
 \end{proof}
 
 Now we can summarize the performance result of sampling on shortest paths.
@@ -417,5 +361,93 @@ In this project, we have revisited Bader's BC estimating algorithm, given more t
 
 \bibliographystyle{acm}
 \bibliography{./lit}
+
+\section{Appendix}
+
+\subsection{Proof of Lemma \ref{lem:df}}
+\begin{proof}
+Note that $\sum_{v_i\in V, v_i\not= v}X_i = A$. Suppose the interval $(0, A)$ is randomly divided into $n$ sub-intervals, each of which represents the length of $X_i$. If the $i$-th sub-interval is larger than $x$, then all the $n-1$ cutting points are distributed outside a sub-interval, whose length is $x$. Formally, we have
+$$\p [X_i>x] = \left( 1-\frac{x}{A} \right)^{n-1}$$
+and $\p [X_i\leq x] = 1-\p [X_i>x]$ gives the desired cdf. By computing the derivative over $0<x<1$, we have the pdf as desired.
+\end{proof}
+
+\subsection{Proof of Corollary \ref{cor:ev}}
+\begin{proof}
+$$
+\begin{aligned}
+E[X_i] &= \int_0^A x\frac{n-1}{A} \left( 1-\frac{x}{A} \right)^{n-2} dx \\
+&= -x\left( 1-\frac{x}{A}\right)^{n-1}\bigg|_0^A + \int_0^A \left( 1-\frac{x}{A}\right)^{n-1} dx \\
+&= -\frac{A}{n} \left( 1-\frac{x}{A} \right)^n\bigg|_0^A = \frac{A}{n}.
+\end{aligned}
+$$
+$$
+\begin{aligned}
+E[X_i^2] &= \int_0^A x^2\frac{n-1}{A} \left( 1-\frac{x}{A} \right)^{n-2} dx \\
+&= -x^2\left( 1-\frac{x}{A}\right)^{n-1}\bigg|_0^A + 2\int_0^A x\left( 1-\frac{x}{A}\right)^{n-1} dx \\
+&= \frac{2A}{n}\int_0^A \left( 1-\frac{x}{A}\right)^{n} dx = \frac{2A^2}{n(n+1)}.
+\end{aligned}
+$$
+$$Var[X_i] = E[X_i^2] - E[X_i]^2 = \frac{2A^2}{n(n+1)} - \frac{A^2}{n^2} = \frac{n-1}{n^2(n+1)}A^2.$$
+\end{proof}
+
+\subsection{Proof of Lemma \ref{lem:1}}
+\begin{proof}
+Note that $BC(v) = A \leq n^2$. Then we have
+$$
+\begin{aligned}
+&\p[\sum_{i=1}^k X_i \geq cn] = \p[\sum_{i=1}^k \left( X_i - \frac{A}{n} \right) \geq cn-\frac{kA}{n}] \\
+= & \p[\sum_{i=1}^k \left( X_i - \frac{A}{n} \right) \geq cn-\varepsilon n(\frac{A}{n^2})^{\frac{1}{3}}] \\
+\leq & \p[\sum_{i=1}^k \left( X_i - \frac{A}{n} \right) \geq cn-\varepsilon n] &(A\leq n^2)\\
+\leq & \p[\bigvee_{i=1}^k\left( X_i - \frac{A}{n} \right) \geq \frac{c-\varepsilon}{k}n] &\textrm{(at least one $X_i$ exceeds the average)} \\
+\leq & \sum_{i=1}^k \p[\left( X_i - \frac{A}{n} \right) \geq \frac{c-\varepsilon}{k}n] &\textrm{(union bound)} \\
+\leq & \sum_{i=1}^k \frac{k^2}{(c-\varepsilon)^2n^2} Var[X_i] &\textrm{(Chebychev's inequality)}\\
+= & \frac{k^2}{(c-\varepsilon)^2n^2} \sum_{i=1}^k \frac{n-1}{n^2(n+1)}A^2 &\textrm{(Corollary \ref{cor:ev})} \\
+= & \frac{\varepsilon^3 (n-1)}{(c-\varepsilon)^2 (n+1)} \leq \frac{\varepsilon^3}{(c-\varepsilon)^2}.
+\end{aligned}
+$$
+\end{proof}
+
+\subsection{Proof of Lemma \ref{lem:2}}
+\begin{proof}
+$$
+\begin{aligned}
+&\p[\bigg|\frac{n}{k}\sum_{i=1}^k X_i - A\bigg|\geq dA]
+= \p[\bigg|\sum_{i=1}^k X_i - \frac{kA}{n}\bigg|\geq \frac{kdA}{n}] \\
+= &\p[\bigg|\sum_{i=1}^k \left( X_i - \frac{A}{n}\right) \bigg|\geq \frac{kdA}{n}]
+\leq \frac{n^2}{k^2d^2A^2}k Var[X_i] & \textrm{(Chebychev's inequality)}\\
+= &\frac{n-1}{(n+1)kd^2} \leq \frac{1}{kd^2} = \frac{1}{\varepsilon d^2} \left(\frac{A}{n^2}\right)^{\frac{2}{3}}.
+\end{aligned}
+$$
+\end{proof}
+
+\subsection{Proof of Lemma \ref{lem:3}}
+\begin{proof}
+$$
+\begin{aligned}
+&\p[\sum_{i=1}^k Y_i \geq cn] \\
+= &\p[\sum_{i=1}^k \left( Y_i - \frac{A}{n(n-1)} \right) \geq cn-\frac{kA}{n(n-1)}] \\
+= & \p[\sum_{i=1}^k \left( Y_i - \frac{A}{n(n-1)} \right) \geq cn-\varepsilon n(\frac{A}{n^2(n-1)})^{\frac{1}{3}}] \\
+\leq & \p[\sum_{i=1}^k \left( Y_i - \frac{A}{n(n-1)} \right) \geq cn-\varepsilon n] &(A\leq n^2)\\
+\leq & \p[\bigvee_{i=1}^k\left( Y_i - \frac{A}{n(n-1)} \right) \geq \frac{c-\varepsilon}{k}n] &\textrm{(at least one $Y_i$ exceeds the average)} \\
+\leq & \sum_{i=1}^k \p[\left( Y_i - \frac{A}{n(n-1)} \right) \geq \frac{c-\varepsilon}{k}n] &\textrm{(union bound)} \\
+\leq & \sum_{i=1}^k \frac{k^2}{(c-\varepsilon)^2n^2} Var[Y_i] &\textrm{(Chebychev's inequality)}\\
+= & \frac{k^2}{(c-\varepsilon)^2n^2} \sum_{i=1}^k \frac{n(n-1)-1}{n^2(n-1)^2(n(n-1)+1)}A^2 &\textrm{(Corollary \ref{cor:ev2})} \\
+= & \frac{\varepsilon^3 (n(n-1)-1)}{(c-\varepsilon)^2 (n(n-1)+1)} \leq \frac{\varepsilon^3}{(c-\varepsilon)^2}. & \textrm{(Jensen's inequality)}
+\end{aligned}
+$$
+\end{proof}
+
+\subsection{Proof of Lemma \ref{lem:4}}
+\begin{proof}
+$$
+\begin{aligned}
+&\p[\bigg|\frac{n(n-1)}{k}\sum_{i=1}^k Y_i - A\bigg|\geq dA]\\
+= &\p[\bigg|\sum_{i=1}^k Y_i - \frac{kA}{n(n-1)}\bigg|\geq \frac{kdA}{n(n-1)}] \\
+= &\p[\bigg|\sum_{i=1}^k \left( Y_i - \frac{A}{n(n-1)}\right) \bigg|\geq \frac{kdA}{n(n-1)}]
+\leq \frac{n^2(n-1)^2}{k^2d^2A^2}k Var[Y_i] & \textrm{(Chebychev's inequality)}\\
+= &\frac{n(n-1)-1}{(n(n-1)+1)kd^2} \leq \frac{1}{kd^2} = \frac{1}{\varepsilon d^2} \left(\frac{A}{n^2(n-1)}\right)^{\frac{2}{3}}. & \textrm{(Jensen's inequality)}
+\end{aligned}
+$$
+\end{proof}
 
 \end{document}
