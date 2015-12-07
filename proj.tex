@@ -356,14 +356,14 @@ In this section, we will present our experimental results of revised Bader's met
 \begin{minipage}[t]{0.3\textwidth}
 \centering
 \includegraphics[width=\textwidth]{./bader1_c_factor.eps}
-\caption{$c \sim \textrm{factor}$.}
+\caption{$c \sim \textrm{factor diff}$.}
 \label{fig:bader_c_factor}
 \end{minipage}
 \hspace{10pt}
 \begin{minipage}[t]{0.3\textwidth}
 \centering
 \includegraphics[width=\textwidth]{./bader1_sample_factor.eps}
-\caption{$\textrm{\# samples} \sim 1/\textrm{factor}$}
+\caption{$\textrm{\# samples} \sim 1/\textrm{factor diff}.$}
 \label{fig:bader_sample_factor}
 \end{minipage}
 \end{figure*}
@@ -371,9 +371,9 @@ In this section, we will present our experimental results of revised Bader's met
 We present the results for our revised Bader's algorithm. 
 Figure \ref{fig:bader_c_sample} gives that the number of samplings increases if the parameter $c$ in the algorithm increases. The growth is almost linear, since the curves present steady slopes. This is because in the algorithm, higher $c$ gives larger threshold when the loop terminates, and hence admits more samplings. Note that the range of $c$ starts from 1.0. That is different from \cite{bader2007approximating}, which required $c>2$. The total number of samplings is no more than 800 for both graphs, which is much less than the number of vertices.
 
-Figure \ref{fig:bader_c_factor} gives that the approximation factor decreases if $c$ increases. This is presented in Theorem \ref{thm:main}. That is, if the number of samples $S=\varepsilon t^{2/3}$, then the factor is less than $b = 1/(\varepsilon t^{1/3}) = t^{1/3}/S$. $b$ should decrease as $S$ increases. It also indicates that the revised Bader's algorithm gives better approximations for sparse graphs. The factors are all less than 7\% for both cases.
+Figure \ref{fig:bader_c_factor} gives that the approximation factor difference decreases if $c$ increases. The factor different is defined as the distance between the factor and 1. Clearly if the factor is 1, then our estimation gives the exact correct BC value. This is presented in Theorem \ref{thm:main}. That is, if the number of samples $S=\varepsilon t^{2/3}$, then the factor is less than $b = 1/(\varepsilon t^{1/3}) = t^{1/3}/S$. $b$ should decrease as $S$ increases. It also indicates that the revised Bader's algorithm gives better approximations for sparse graphs. The factor differences are all less than 7\% for both cases.
 
-Figure \ref{fig:bader_sample_factor} gives that the reciprocal factor is almost linearly related to the number of samples. From Theorem \ref{thm:main}, the upper bound $b$ of factor satisfies $b = t^{1/3}/S$, or $1/b \propto S$. Figure \ref{fig:bader_sample_factor} indicates that the actual factor seems to be proportional to the number of samplings as well. 
+Figure \ref{fig:bader_sample_factor} gives that the reciprocal of factor difference is almost linearly related to the number of samples. From Theorem \ref{thm:main}, the upper bound $b$ of factor satisfies $b = t^{1/3}/S$, or $1/b \propto S$. Figure \ref{fig:bader_sample_factor} indicates that the actual reciprocal of factor difference seems to be proportional to the number of samplings as well. 
 
 Figures \ref{fig:bader_c_factor} and \ref{fig:bader_sample_factor} together indicates that the revised Bader's algorithm still works well for $1<c<2$.
 
@@ -391,26 +391,26 @@ Figures \ref{fig:bader_c_factor} and \ref{fig:bader_sample_factor} together indi
 \begin{minipage}[t]{0.3\textwidth}
 \centering
 \includegraphics[width=\textwidth]{./rion_c_factor.eps}
-\caption{$c \sim \textrm{factor}$.}
+\caption{$c \sim \textrm{factor diff}$.}
 \label{fig:rion_c_factor}
 \end{minipage}
 \hspace{10pt}
 \begin{minipage}[t]{0.3\textwidth}
 \centering
 \includegraphics[width=\textwidth]{./rion_sample_factor.eps}
-\caption{$\textrm{\# samples} \sim 1/\textrm{factor}$}
+\caption{$\textrm{\# samples} \sim 1/\textrm{factor diff}$}
 \label{fig:rion_sample_factor}
 \end{minipage}
 \end{figure*}
 
 Figure \ref{fig:rion_c_sample} gives that the number of samplings increases if the parameter $c$ in the algorithm increases. The growth is almost linear, since the curves present steady slopes. Similarly to the first algorithm, this is because in the algorithm, higher $c$ gives larger threshold when the loop terminates, allowing more samplings. The number of samplings for graph with more vertices grows faster, since based on Theorem \ref{thm:main2}, the number of samples is proportional to $(n-1)^{1/3}$, where $n$ denotes the number of vertices. The sampled paths are no more than 16000 for both graphs.
 
-Figure \ref{fig:rion_c_factor} gives that the approximation factor decreases if $c$ increases. This is presented in Theorem \ref{thm:main2}. That is, if the number of samples $S'=\varepsilon t^{2/3}(n-1)^{1/3}$, then the factor is less than $b' = 1/(\varepsilon (t(n-1))^{1/3}) = t^{1/3}/S'$. $b'$ should decrease as $S'$ increases. It also indicates that our algorithm gives better approximations for sparse graphs. The factors are all less than 5\% for both cases, which is slightly better than the previous revised Bader's.
+Figure \ref{fig:rion_c_factor} gives that the approximation factor difference decreases if $c$ increases. This is presented in Theorem \ref{thm:main2}. That is, if the number of samples $S'=\varepsilon t^{2/3}(n-1)^{1/3}$, then the factor is less than $b' = 1/(\varepsilon (t(n-1))^{1/3}) = t^{1/3}/S'$. $b'$ should decrease as $S'$ increases. It also indicates that our algorithm gives better approximations for sparse graphs. The factor differences are all less than 5\% for both cases, which is slightly better than the previous revised Bader's.
 
-Figure \ref{fig:rion_sample_factor} gives that the reciprocal factor is almost linearly related to the number of samples. From Theorem \ref{thm:main2}, the upper bound $b'$ of factor satisfies $b' = t^{1/3}/S'$, or $1/b' \propto S'$. It also indicates that the actual factor seems to be proportional to the number of samplings as well.
+Figure \ref{fig:rion_sample_factor} gives that the reciprocal of factor difference is almost linearly related to the number of samples. From Theorem \ref{thm:main2}, the upper bound $b'$ of factor satisfies $b' = t^{1/3}/S'$, or $1/b' \propto S'$. It also indicates that the actual reciprocal of factor difference seems to be proportional to the number of samplings as well.
 
 \section{Future Works}
-One open problem which is revealed in the experiments is that it seems the reciprocal factor is proportional to the number of samplings. The question is whether this conjecture can be shown by theory. Theorems \ref{thm:main} and \ref{thm:main2} both only discuss the upper bound of factors. How to more tightly bound the factors still needs further research.
+One open problem which is revealed in the experiments is that it seems the reciprocal of factor difference is proportional to the number of samplings. The question is whether this conjecture can be shown by theory. Theorems \ref{thm:main} and \ref{thm:main2} both only discuss the upper bound of factors. How to more tightly bound the factors still needs further research.
 
 \section{Conclusions}
 In this project, we have revisited Bader's BC estimating algorithm, given more tight bounds on the estimations, and improved the performance of the approximation algorithm, i.e., fewer samples and lower factors. We have also proposed an \emph{adaptive} algorithm with samplings on vertices. With rigorous reasoning, we have shown that our algorithm can also give bounded approximation factors and number of samplings. To evaluate our results, we have also conducted extensive experiments using real-world datasets. It turns out that both the algorithms can achieve ideal performance. We have verified that our work can improve the current BC approximation algorithm with better parameters, i.e., higher successful probabilities, lower factors and fewer samples.
